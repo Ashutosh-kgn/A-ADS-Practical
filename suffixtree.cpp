@@ -27,14 +27,14 @@ class SuffixTree{
             temp->end = true;
         }
         void build(string text){
-            for(int i=0;i<text.length();i++){
-                string suffix = "";
-                for(int j=0;j<text.length();j++){
-                    suffix = suffix+text[j];
-                }
-                insert(suffix);
+            for(int i = 0; i < text.length(); i++){
+            string suffix = "";
+            for(int j = i; j < text.length(); j++){
+                suffix += text[j];
             }
-        }
+            insert(suffix);
+            }
+        }       
         bool search(string pattern){
             Node *temp = root;
             for(int i=0;i<pattern.length();i++){
@@ -55,8 +55,8 @@ int main(){
     cout<<"Enter pattern to search: ";
     cin>>pattern;
     if(st.search(pattern))
-        cout<<"Patter found";
+        cout<<"Patter found\n";
     else
-        cout<<"Pattern not found";
+        cout<<"Pattern not found\n";
     return 0;
 }
