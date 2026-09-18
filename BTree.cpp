@@ -278,9 +278,14 @@ int main(){
         cin>>choice;
         switch(choice){
             case 1:
-                cout<<"Enter value to insert: ";
-                cin>>val;
-                tree.insert(val);
+            int n;
+                cout<<"Enter no. of keys to be insert: ";
+                cin>>n;
+                cout<<"Enter the values: ";
+                for(int i=0;i<n;i++){
+                    cin>>val;
+                    tree.insert(val);
+                }
                 break;
             case 2:
                 cout<<"Enter value to delete: ";
