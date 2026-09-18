@@ -83,6 +83,123 @@ class BTreeNode{
             keys[i] = y->keys[t-1];
             n++;
         }
+        // --------- DELETION ----------
+        int findkey(int k){
+            int idx = 0;
+            while(idx<n && keys[idx]<k)
+                idx++;
+            return idx;
+        }
+        void remove(int k){
+            int idx = findkey(k);
+            if(idx<n && keys[idx]==k){
+                if(leaf)
+                    removeFromLeaf(idx);
+            }
+            else{
+                if(leaf){
+                    cout<<"The Key"<<k<<"does not exists in the tree\n";
+                    return;
+                }
+                bool flag = ((idx==n) ? true:false);
+                if (child[idx]->n<t)
+                    fill(idx);
+                if (flag && idx>n)
+                    child[idx-1] -> remove(k);
+                else child[idx]->remove(k);
+            }
+        }
+        void removeFromLeaf(int idx){
+            for(int i=idx+1;i<n;++i)
+                keys[i-1] = keys[i];
+            n--;
+        }
+        void removeFromNonLeaf(int idx){
+            int k = keys[idx];
+            if(child[idx]->n >= t){
+                int pred = getPred(idx);
+                keys[idx] = pred;
+                child[idx]->remove(pred);
+            }
+            else if(child[idx+1]->n >= t){
+                int succ = getPred(idx);
+                keys[idx] = succ;
+                child[idx+1]->remove(succ);
+            }
+            else{
+                merge(idx);
+                child[idx]->remove(k);
+            }
+        }
+        int getPred(int idx){
+            BTreeNode *cur = child[idx];
+            while (!cur->leaf)
+                cur = cir->child[0];
+            return cur->keys[0];
+        }
+        void fill(int idx){
+            if (idx!=0 && child[idx-1]->n >= t)
+                borrowFromPrev(idx);
+            else if(idx!=n && child[idx+1]->n >= t)
+                borrowFromNext(idx);
+            else{
+                if (idx != n)
+                    merge(idx);
+                else
+                    merge(idx-1);
+            }
+        }
+        void borrowFromPrev(int idx){
+            BTreeNode *ch = child[idx];
+            BTreeNode *sibling = child[idx-1];
+            for(int i=ch->n-1;i>=0;--i)
+                ch->keys[i+1] = ch->keys[i];
+            if(!ch->leaf){
+                for(int i=ch->n;i>=0;--i)
+                    ch->child[i+1] = ch->child[i];
+            }
+            ch->keys[0] = keys[idx-1];
+            if(!ch->leaf)
+                ch->child[0] = sibling->child[sibling->n];
+            keys[idx-1] = sibling->keys[sibling->n-1];
+            ch->n += 1;
+            sibling->n -= 1;
+        }
+        void borrowFromNext(int idx){
+            BTreeNode *ch = child[idx];
+            BTreeNode *sibling = child[idx+1];
+            ch->keys[ch->n] = keys[idx];
+            if(!ch->leaf)
+                ch->child[ch->n+1] = sibling->child[0];
+            keys[idx] = sibling->keys[0];
+            for(int i=1;i<sibling->n;++i)
+                sibling->keys[i-1] = sibling->keys[i];
+            if(!sibling->leaf){
+                for(int i=1;i<=sibling->n;++i)
+                    sibling->child[i-1] = sibling->child[i];
+            }
+            
+            ch->n += 1;
+            sibling->n -= 1;
+        }
+        void merge(int idx){
+            BTreeNode *ch = child[idx];
+            BTreeNode *sibling = child[idx+1];
+            ch->keys[t-1] = keys[idx];
+            for(int i=0;i<sibling->n;++i)
+                ch->keys[i+t] = sibling->keys[i];
+            if(!ch->leaf){
+                for(int i=0;i<=sibling->n;++i)
+                    ch->child[i+t] = sibling->child[i];
+            }
+            for(int i=idx+1;i<n;++i)
+                keys[i-1] = keys[i];
+            for(int i=idx+2;i<=n;++i)
+                child[i-1] = child[i];
+            ch->n += sibling->n+1;
+            n--;
+            delete(sibling);
+        }
 };
 
 class Btree{
@@ -115,15 +232,33 @@ class Btree{
                     root->insertNonFull(k);
             }
         }
+
+        void remove(int k){
+            if(!root){
+                cout<<"B-Tree is empty\n";
+                return;
+            }
+            root->remove(k);
+            // If root has 0 keys left, make its first child the new root
+            if(root->n==0){
+                BTreeNode *tmp = root;
+                if(root->leaf)
+                    root=NULL;
+                else
+                    root=root->child[0];
+                delete tmp;
+            }
+        }
+
         void search(int k){
             if(root == NULL){
-                cout<<"Tree is empty\n";
+                cout<<"B-Tree is empty\n";
                 return;
             }
             if(root->search(k)!=NULL)
-                cout<<"Key found\n";
+                cout<<"Key"<<k<<" found\n";
             else
-                cout<<"Key not found!!!\n"
+                cout<<"Key"<<k<<" not found!!!\n"
         }
         void display(){
             if(root!=NULL)
@@ -132,21 +267,40 @@ class Btree{
         }
 };
 int main(){
-    int t,n,x;
-    cout<<"Enter m : ";
-    cin>>t;
+    int t,m;
+    cout<<"Enter max no. of children (m) : ";
+    cin>>m;
+    t=(m+1)/2;
     Btree tree(t);
-    cout<<"Enter Number of elements: ";
-    cin>>n;
-    cout<<"Enter elements: \n";
-    for(int i=0;i<n;i++){
-        cin>>x;
-        tree.insert(x);
+    int choice,val;
+    while(true){
+        cout<<"\n1.Insert 2. Delete 3. Search 4. Display 5. Exit\nChoice: ";
+        cin>>choice;
+        switch(choice){
+            case 1:
+                cout<<"Enter value to insert: ";
+                cin>>val;
+                tree.insert(val);
+                break;
+            case 2:
+                cout<<"Enter value to delete: ";
+                cin>>val;
+                tree.remove(val);
+                break;
+            case 3:
+                cout<<"Enter value to search: ";
+                cin>>val;
+                tree.search(val);
+                break;
+            case 4:
+                cout<<"B-Tree traversal: ";
+                tree.display();
+                break;
+            case 5:
+                return 0;
+            default:
+                cout<<"Invalid choice!\n";
+        }
     }
-    cout<<"\nB-Tree traversal: ";
-    tree.display();
-    cout<<"\nEnter key to search: ";
-    cin>>x;
-    tree.search(x);
     return 0;
 }
