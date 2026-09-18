@@ -2,7 +2,7 @@
 using namespace std;
 class BTreeNode{
     public:
-        int *key;
+        int *keys;
         BTreeNode **child;
         int n;
         bool leaf;
@@ -10,7 +10,7 @@ class BTreeNode{
         BTreeNode(int t,bool leaf){
             this->t=t;
             this->leaf=leaf;
-            key = new int[2*t-1];
+            keys = new int[2*t-1];
             child = new BTreeNode*[2*t];
             n=0;
         }
@@ -20,10 +20,10 @@ class BTreeNode{
             for(i=0;i<n;i++){
                 if(!leaf)
                     child[i]->traverse();
-                cout<<keys[i]<" ";
+                cout<<keys[i]<<" ";
             }
             if (!leaf)
-                child[i]->traverse()
+                child[i]->traverse();
         }
 
         //Search for a key
@@ -61,13 +61,13 @@ class BTreeNode{
             }
         }
         //split a full child
-        void splitChild(int i;BTreeNode *y){
+        void splitChild(int i,BTreeNode *y){
             BTreeNode *z = new BTreeNode(y->t,y->leaf);
             z->n = t-1;
             for(int j=0;j<t-1;j++)
                 z->keys[j] = y->keys[j+t];
             if (!y->leaf){
-                for(int j=0lj<t;j++)
+                for(int j=0;j<t;j++)
                     z->child[j] = y->child[j+t];
             }
             y->n = t-1;
@@ -134,7 +134,7 @@ class BTreeNode{
         int getPred(int idx){
             BTreeNode *cur = child[idx];
             while (!cur->leaf)
-                cur = cir->child[0];
+                cur = cur->child[0];
             return cur->keys[0];
         }
         void fill(int idx){
@@ -258,7 +258,7 @@ class Btree{
             if(root->search(k)!=NULL)
                 cout<<"Key"<<k<<" found\n";
             else
-                cout<<"Key"<<k<<" not found!!!\n"
+                cout<<"Key"<<k<<" not found!!!\n";
         }
         void display(){
             if(root!=NULL)
